@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import uvicorn
 import models
@@ -11,6 +12,20 @@ import threading
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",  # Vue Dev Server
+    "http://localhost:8000",  # FastAPI Server (для тестирования, если понадобится)
+    "http://localhost:8080",  # FastAPI Server (для тестирования, если понадобится)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def get_db():
@@ -39,8 +54,8 @@ def get_cpu_load_last_hour(db: Session = Depends(get_db)):
 
 @app.get("/average_load_last_hour")
 def get_average_load_last_hour(db: Session = Depends(get_db)):
-    avg_load = crud.compute_average_load_per_minute(db)
-    return {"average_load_last_hour": avg_load}
+    avg_loads = crud.compute_average_load_per_minute(db)
+    return avg_loads
 
 
 if __name__ == "__main__":
