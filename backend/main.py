@@ -58,5 +58,14 @@ def get_average_load_last_hour(db: Session = Depends(get_db)):
     return avg_loads
 
 
+@app.get("/cpu_loads_with_gaps")
+def get_cpu_loads_with_gaps(db: Session = Depends(get_db)):
+    cpu_loads, gaps = crud.get_cpu_loads_with_gaps(db)
+    return {
+        "cpu_loads": [{"timestamp": load.timestamp, "value": load.value} for load in cpu_loads],
+        "gaps": gaps
+    }
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
