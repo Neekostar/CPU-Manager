@@ -41,6 +41,7 @@ export default {
             data: this.averageLoadData.map(entry => entry.average_load),
             borderColor: 'rgb(255, 99, 132)',
             fill: false,
+            spanGaps: true,
           }]
         },
         options: {
@@ -74,6 +75,7 @@ export default {
   }
 }
 </script>
+
 
 <style scoped>
 .chart-container {
