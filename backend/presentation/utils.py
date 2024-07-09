@@ -1,7 +1,7 @@
 import asyncio
-from sqlalchemy.orm import Session
 import psutil
-import crud
+from sqlalchemy.orm import Session
+from infrastructure.repositories.cpu_load_repository import CPULoadRepository
 
 
 async def save_cpu_load(db: Session) -> None:
@@ -11,14 +11,11 @@ async def save_cpu_load(db: Session) -> None:
     :param db: A SQLAlchemy Session object that represents a database connection.
     :type db: Session
 
-    The function uses the `psutil` library to get the CPU load percentage every 1 second (interval=1) and
-    averages it across all CPUs (percpu=False). It then creates a new `cpu_load` record in the database
-    using the `crud.create_cpu_load` function. The function then sleeps for 5 seconds before repeating the process.
-
     :return: None
     :rtype: None
     """
+    repo = CPULoadRepository(db)
     while True:
         cpu_percent = psutil.cpu_percent(interval=1, percpu=False)
-        crud.create_cpu_load(db, cpu_percent)
+        repo.create_cpu_load(cpu_percent)
         await asyncio.sleep(5)
