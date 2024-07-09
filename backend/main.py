@@ -14,9 +14,9 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173",  # Vue Dev Server
-    "http://localhost:8000",  # FastAPI Server (для тестирования, если понадобится)
-    "http://localhost:8080",  # FastAPI Server (для тестирования, если понадобится)
+    "http://localhost:5173",
+    "http://localhost:8000",
+    "http://localhost:8080",
 ]
 
 app.add_middleware(
@@ -46,18 +46,6 @@ def startup_event():
     threading.Thread(target=run_save_cpu_load, daemon=True).start()
 
 
-@app.get("/cpu_load_last_hour")
-def get_cpu_load_last_hour(db: Session = Depends(get_db)):
-    cpu_loads = crud.get_cpu_loads_last_hour(db)
-    return [{"timestamp": load.timestamp, "value": load.value} for load in cpu_loads]
-
-
-@app.get("/average_load_last_hour")
-def get_average_load_last_hour(db: Session = Depends(get_db)):
-    avg_loads = crud.compute_average_load_per_minute(db)
-    return avg_loads
-
-
 @app.get("/cpu_loads_with_gaps")
 def get_cpu_loads_with_gaps(db: Session = Depends(get_db)):
     cpu_loads, gaps = crud.get_cpu_loads_with_gaps(db)
@@ -65,6 +53,12 @@ def get_cpu_loads_with_gaps(db: Session = Depends(get_db)):
         "cpu_loads": [{"timestamp": load.timestamp, "value": load.value} for load in cpu_loads],
         "gaps": gaps
     }
+
+
+@app.get("/average_load_last_hour")
+def get_average_load_last_hour(db: Session = Depends(get_db)):
+    avg_loads = crud.compute_average_load_per_minute(db)
+    return avg_loads
 
 
 if __name__ == "__main__":
