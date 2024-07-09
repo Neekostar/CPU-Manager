@@ -32,16 +32,17 @@ export default {
     },
     drawChart() {
       const ctx = document.getElementById('average-load-chart').getContext('2d');
+      const chartData = this.processData(this.averageLoadData);
+
       new Chart(ctx, {
         type: 'line',
         data: {
-          labels: this.averageLoadData.map(entry => entry.timestamp),
           datasets: [{
             label: 'Average CPU Load',
-            data: this.averageLoadData.map(entry => entry.average_load),
+            data: chartData,
             borderColor: 'rgb(255, 99, 132)',
             fill: false,
-            spanGaps: true,
+            spanGaps: false,
           }]
         },
         options: {
@@ -71,11 +72,25 @@ export default {
           }
         }
       });
+    },
+    processData(data) {
+      const processedData = [];
+      for (let i = 0; i < data.length; i++) {
+        const currentEntry = data[i];
+        const nextEntry = data[i + 1];
+
+        // Check if nextEntry exists and if the difference is less than a minute
+        if (nextEntry && Math.abs(new Date(nextEntry.timestamp) - new Date(currentEntry.timestamp)) > 60000) {
+          processedData.push({ x: new Date(currentEntry.timestamp), y: null });
+        } else {
+          processedData.push({ x: new Date(currentEntry.timestamp), y: currentEntry.average_load });
+        }
+      }
+      return processedData;
     }
   }
 }
 </script>
-
 
 <style scoped>
 .chart-container {
@@ -87,6 +102,7 @@ export default {
   padding: 20px;
   border-radius: 8px;
 }
+
 canvas {
   display: block;
   width: 100% !important;

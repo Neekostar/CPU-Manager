@@ -34,71 +34,19 @@ export default {
     },
     drawChart() {
       const ctx = document.getElementById('instant-load-chart').getContext('2d');
-
-      // Преобразуем данные в активные сегменты и неактивные периоды
-      const activeSegments = [];
-      let currentSegment = [];
-
-      this.instantLoadData.forEach(entry => {
-        if (this.isActivePeriod(entry.timestamp)) {
-          currentSegment.push({ x: entry.timestamp, y: entry.value });
-        } else {
-          if (currentSegment.length > 0) {
-            activeSegments.push(currentSegment);
-            currentSegment = [];
-          }
-          if (entry.value === null) {
-            return;
-          }
-          currentSegment.push({x: entry.timestamp, y: 0});
-        }
-      });
-
-      // Добавляем последний сегмент, если он не пустой
-      if (currentSegment.length > 0) {
-        activeSegments.push(currentSegment);
-      }
-
-      const inactiveSegments = this.gaps.filter(gap => !gap.is_active).map(gap => {
-        return [
-          { x: new Date(gap.start_time), y: 0 },
-          { x: new Date(gap.end_time), y: 0 }
-        ];
-      });
-
-      // Объединяем активные и неактивные сегменты
-      const combinedSegments = [];
-      let currentCombinedSegment = [];
-
-      for (let i = 0; i < activeSegments.length; i++) {
-        currentCombinedSegment = currentCombinedSegment.concat(activeSegments[i]);
-        if (i < inactiveSegments.length) {
-          currentCombinedSegment.push(inactiveSegments[i][0]);
-          currentCombinedSegment = currentCombinedSegment.concat(inactiveSegments[i].slice(1));
-        }
-        if (i < activeSegments.length - 1) {
-          currentCombinedSegment.push({
-            x: activeSegments[i + 1][0].x,
-            y: null,
-            borderColor: 'rgb(75, 192, 192)'
-          });
-        }
-      }
-
-      combinedSegments.push(currentCombinedSegment);
+      const chartData = this.processData(this.instantLoadData);
 
       new Chart(ctx, {
         type: 'line',
         data: {
-          datasets: [
-            {
-              label: 'CPU Load',
-              data: combinedSegments.flat(),
-              borderColor: 'rgb(75, 192, 192)',
-              fill: false,
-              spanGaps: true
-            }
-          ]
+          datasets: [{
+            label: 'Instant CPU Load',
+            data: chartData,
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.4)',
+            fill: false,
+            spanGaps: false
+          }]
         },
         options: {
           responsive: true,
@@ -122,29 +70,40 @@ export default {
               title: {
                 display: true,
                 text: 'CPU Load (%)'
-              }
+              },
+              beginAtZero: true
             }
           }
         }
       });
     },
-    isActivePeriod(timestamp) {
-      // Проверяем, является ли данный момент времени активным периодом
-      for (const gap of this.gaps) {
-        if (!gap.is_active && timestamp >= gap.start_time && timestamp <= gap.end_time) {
-          return false;
+    processData(data) {
+      const processedData = [];
+      const threshold = 10000; // 10 секунд в миллисекундах
+
+      for (let i = 0; i < data.length; i++) {
+        const current = data[i];
+        const currentTime = new Date(current.timestamp);
+
+        if (i > 0) {
+          const previous = data[i - 1];
+          const previousTime = new Date(previous.timestamp);
+
+          // Если разница между текущей и предыдущей записью больше 10 секунд, добавляем null
+          if (currentTime - previousTime > threshold) {
+            processedData.push({ x: previousTime, y: null });
+            processedData.push({ x: currentTime, y: null });
+          }
         }
+
+        processedData.push({ x: currentTime, y: current.value });
       }
-      return true;
+
+      return processedData;
     }
   }
 }
 </script>
-
-
-
-
-
 
 <style scoped>
 .chart-container {
@@ -156,6 +115,7 @@ export default {
   padding: 20px;
   border-radius: 8px;
 }
+
 canvas {
   display: block;
   width: 100% !important;
