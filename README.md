@@ -74,7 +74,7 @@ CPU Load Manager — это приложение для мониторинга �
     }
   ]
 }
-```json
+```
 
 ### `GET /average_load_last_hour`
 
@@ -94,10 +94,10 @@ CPU Load Manager — это приложение для мониторинга �
     "average_load": 27.8
   }
 ]
-```json
+```
 
 ## Демонстрация
 
-![image](image.png)
-![image](image-1.png)
-![image](image-2.png)
+![image](https://github.com/Neekostar/CPU-Manager/raw/master/frontend/src/assets/image.png)
+![image](https://github.com/Neekostar/CPU-Manager/raw/master/frontend/src/assets/image-1.png)
+![image](https://github.com/Neekostar/CPU-Manager/raw/master/frontend/src/assets/image-2.png)
